@@ -3,10 +3,13 @@ package com.es.phoneshop.model.product;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.List;
 
-public class ArrayListProductDaoTest
-{
+import static org.junit.Assert.*;
+
+public class ArrayListProductDaoTest {
     private ProductDao productDao;
 
     @Before
@@ -16,6 +19,27 @@ public class ArrayListProductDaoTest
 
     @Test
     public void testFindProductsNoResults() {
-        assertTrue(productDao.findProducts().isEmpty());
+        assertFalse(productDao.findProducts().isEmpty());
+    }
+
+    @Test
+    public void testSaveNewProduct() {
+        Currency usd = Currency.getInstance("USD");
+        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        productDao.save(product);
+        assertTrue(product.getId() > 0);
+        Product result = productDao.getProduct(Long.valueOf(product.getId()));
+        assertNotNull(result);
+        assertEquals("test-product", result.getCode());
+    }
+
+    @Test
+    public void testDeleteProduct() {
+        Currency usd = Currency.getInstance("USD");
+        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        productDao.save(product);
+        productDao.delete(Long.valueOf(product.getId()));
+        List<Product> result = productDao.findProducts();
+        assertFalse(result.contains(product));
     }
 }
