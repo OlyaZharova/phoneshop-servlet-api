@@ -42,4 +42,22 @@ public class ArrayListProductDaoTest {
         List<Product> result = productDao.findProducts();
         assertFalse(result.contains(product));
     }
+
+    @Test
+    public void testFindProductsWithZeroStock() {
+        Currency usd = Currency.getInstance("USD");
+        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 0, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        productDao.save(product);
+        List<Product> result = productDao.findProducts();
+        assertFalse(result.contains(product));
+    }
+
+    @Test
+    public void testFindProductsWithNullPrice() {
+        Currency usd = Currency.getInstance("USD");
+        Product product = new Product("test-product", "Siemens SXG75", null, usd, 10, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        productDao.save(product);
+        List<Product> result = productDao.findProducts();
+        assertFalse(result.contains(product));
+    }
 }
