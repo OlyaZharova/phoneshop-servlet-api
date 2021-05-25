@@ -4,14 +4,16 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class ArrayListProductDao implements ProductDao {
 
     private long maxId;
     private List<Product> products;
-    private final static Object lock = new Object();
+    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+
 
     public ArrayListProductDao() {
         this.products = new ArrayList<>();
@@ -19,46 +21,65 @@ public class ArrayListProductDao implements ProductDao {
     }
 
     @Override
-    public Product getProduct(Long id) throws NoSuchElementException {
-        synchronized (lock) {
+    public Optional<Product> getProduct(Long id) {
+        rwl.readLock().lock();
+        try {
             return products.stream()
                     .filter(product -> id.equals(product.getId()))
-                    .findAny()
-                    .get();
+                    .findAny();
+        } finally {
+            rwl.readLock().unlock();
         }
     }
 
     @Override
     public List<Product> findProducts() {
-        synchronized (lock) {
+        rwl.readLock().lock();
+        try {
             return products.stream()
                     .filter(product -> product.getPrice() != null)
                     .filter(product -> product.getStock() > 0)
                     .collect(Collectors.toList());
+        } finally {
+            rwl.readLock().unlock();
         }
     }
 
     @Override
     public void save(Product product) {
-        synchronized (lock) {
-            if (product.getId() != null) {
-                products.set(products.indexOf(getProduct(product.getId())), product);
+        rwl.writeLock().lock();
+        try {
+            if (product.getId() != null && getProduct(product.getId()).isPresent()) {
+                Product oldProduct = products.stream()
+                        .filter(product1 -> product.getId() == product1.getId())
+                        .findAny()
+                        .get();
+                products.set(products.indexOf(oldProduct), product);
             } else {
                 product.setId(maxId++);
                 products.add(product);
             }
+        } finally {
+            rwl.writeLock().unlock();
         }
     }
 
     @Override
     public void delete(Long id) {
-        synchronized (lock) {
-            products.remove(getProduct(id));
+        rwl.writeLock().lock();
+        try {
+            if (getProduct(id).isPresent()) {
+                System.out.println("work");
+                products.remove(getProduct(id).get());
+            }
+        } finally {
+            rwl.writeLock().unlock();
         }
     }
 
     private void saveSampleProducts() {
-        synchronized (lock) {
+        rwl.writeLock().lock();
+        try {
             Currency usd = Currency.getInstance("USD");
             save(new Product("sgs", "Samsung Galaxy S", new BigDecimal(100), usd, 100, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S.jpg"));
             save(new Product("sgs2", "Samsung Galaxy S II", new BigDecimal(200), usd, 0, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S%20II.jpg"));
@@ -73,6 +94,8 @@ public class ArrayListProductDao implements ProductDao {
             save(new Product("simc56", "Siemens C56", new BigDecimal(70), usd, 20, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20C56.jpg"));
             save(new Product("simc61", "Siemens C61", new BigDecimal(80), usd, 30, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20C61.jpg"));
             save(new Product("simsxg75", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg"));
+        } finally {
+            rwl.writeLock().unlock();
         }
     }
 }
