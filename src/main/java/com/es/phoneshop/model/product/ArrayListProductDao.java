@@ -49,12 +49,11 @@ public class ArrayListProductDao implements ProductDao {
     public void save(Product product) {
         rwl.writeLock().lock();
         try {
-            if (product.getId() != null && getProduct(product.getId()).isPresent()) {
-                Product oldProduct = products.stream()
-                        .filter(product1 -> product.getId() == product1.getId())
-                        .findAny()
-                        .get();
-                products.set(products.indexOf(oldProduct), product);
+            if (product.getId() != null) {
+                Optional<Product> oldProduct = getProduct(product.getId());
+                if (oldProduct.isPresent()) {
+                    products.set(products.indexOf(oldProduct.get()), product);
+                }
             } else {
                 product.setId(maxId++);
                 products.add(product);
@@ -68,9 +67,9 @@ public class ArrayListProductDao implements ProductDao {
     public void delete(Long id) {
         rwl.writeLock().lock();
         try {
-            if (getProduct(id).isPresent()) {
-                System.out.println("work");
-                products.remove(getProduct(id).get());
+            Optional<Product> product = getProduct(id);
+            if (product.isPresent()) {
+                products.remove(product.get());
             }
         } finally {
             rwl.writeLock().unlock();

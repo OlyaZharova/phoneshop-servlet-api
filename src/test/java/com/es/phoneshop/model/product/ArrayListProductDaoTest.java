@@ -46,8 +46,18 @@ public class ArrayListProductDaoTest {
         List<Product> result = productDao.findProducts();
         assertFalse(result.contains(product));
         assertTrue(result.contains(newProduct));
-
     }
+
+    @Test
+    public void testSaveNotExistingProductWithId() {
+        Currency usd = Currency.getInstance("USD");
+        int lenght = productDao.findProducts().size();
+        Product product = new Product((long) lenght + 1, "test-product3", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        productDao.save(product);
+        List<Product> result = productDao.findProducts();
+        assertFalse(result.contains(product));
+    }
+
 
     @Test
     public void testDeleteProduct() {
