@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
@@ -12,23 +13,33 @@ import static org.junit.Assert.*;
 
 public class ArrayListProductDaoTest {
     private ProductDao productDao;
+    private SortField sortField;
+    private SortOrder sortOrder;
+    private Currency usd;
+    private List<PriceHistory> histories;
 
     @Before
     public void setup() {
-        productDao = new ArrayListProductDao();
+        productDao = ArrayListProductDao.getInstance();
+        sortField = SortField.description;
+        sortOrder = SortOrder.desc;
+        usd = Currency.getInstance("USD");
+        histories = new ArrayList<>();
+        histories.add(new PriceHistory("1 Set 2018", new BigDecimal(100), usd));
+        histories.add(new PriceHistory("10 Oct 2018", new BigDecimal(110), usd));
+        histories.add(new PriceHistory("10 Jan 2019", new BigDecimal(150), usd));
     }
 
     @Test
     public void testFindProductsNoResults() {
-        assertFalse(productDao.findProducts().isEmpty());
+        assertFalse(productDao.findProducts(null, sortField, sortOrder).isEmpty());
     }
 
     @Test
     public void testSaveNewProduct() {
-        Currency usd = Currency.getInstance("USD");
-        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
-        assertTrue(product.getId() > 0);
+        assertTrue(product.getId() != null);
         Optional<Product> result = productDao.getProduct(product.getId());
         Boolean present = result.isPresent();
         assertTrue(present);
@@ -38,62 +49,86 @@ public class ArrayListProductDaoTest {
 
     @Test
     public void testSaveExistingProduct() {
-        Currency usd = Currency.getInstance("USD");
-        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
-        Product newProduct = new Product(product.getId(), "new-test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product newProduct = new Product(product.getId(), "new-test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(newProduct);
-        List<Product> result = productDao.findProducts();
+        List<Product> result = productDao.findProducts(null, null, null);
         assertFalse(result.contains(product));
         assertTrue(result.contains(newProduct));
     }
 
     @Test
     public void testSaveNotExistingProductWithId() {
-        Currency usd = Currency.getInstance("USD");
-        int lenght = productDao.findProducts().size();
-        Product product = new Product((long) lenght + 1, "test-product3", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
-        List<Product> result = productDao.findProducts();
-        assertFalse(result.contains(product));
+        Product newProduct = new Product(product.getId() + 1, "new-test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        productDao.save(newProduct);
+        List<Product> result = productDao.findProducts(null, null, null);
+        assertFalse(result.contains(newProduct));
     }
 
 
     @Test
     public void testDeleteProduct() {
-        Currency usd = Currency.getInstance("USD");
-        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
         productDao.delete(Long.valueOf(product.getId()));
-        List<Product> result = productDao.findProducts();
+        List<Product> result = productDao.findProducts(null, null, null);
         assertFalse(result.contains(product));
     }
 
     @Test
     public void testDeleteNotExistingProduct() {
-        Currency usd = Currency.getInstance("USD");
-        int lenght = productDao.findProducts().size();
-        Product product = new Product((long) lenght + 1, "test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        List<Product> listBeforeDelete = productDao.findProducts(null, sortField, sortOrder);
+        Product product = new Product(listBeforeDelete.get(listBeforeDelete.size() - 1).getId() + 1, "test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.delete(product.getId());
-        List<Product> result = productDao.findProducts();
-        assertEquals(lenght, result.size());
+        List<Product> listAfterDelete = productDao.findProducts(null, sortField, sortOrder);
+        assertEquals(listBeforeDelete.size(), listAfterDelete.size());
     }
 
     @Test
     public void testFindProductsWithZeroStock() {
-        Currency usd = Currency.getInstance("USD");
-        Product product = new Product("test-product", "Siemens SXG75", new BigDecimal(150), usd, 0, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 0, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
-        List<Product> result = productDao.findProducts();
+        List<Product> result = productDao.findProducts(null, null, null);
         assertFalse(result.contains(product));
     }
 
     @Test
     public void testFindProductsWithNullPrice() {
-        Currency usd = Currency.getInstance("USD");
-        Product product = new Product("test-product", "Siemens SXG75", null, usd, 10, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg");
+        Product product = new Product(null, "test-product", "Siemens SXG75", null, usd, 10, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.save(product);
-        List<Product> result = productDao.findProducts();
+        List<Product> result = productDao.findProducts(null, null, null);
         assertFalse(result.contains(product));
     }
+
+    @Test
+    public void testFindProductsByQuery() {
+        Product product1 = new Product(null, "test-product1", "Siemens SXG75", new BigDecimal(150), usd, 120, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        Product product2 = new Product(null, "test-product2", "Apple IPhone 6", new BigDecimal(150), usd, 130, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        productDao.save(product1);
+        productDao.save(product2);
+        List<Product> result = productDao.findProducts("IPhone", null, null);
+        assertEquals(result.size(), 1);
+        assertFalse(result.contains(product1));
+        assertTrue(result.contains(product2));
+    }
+
+    @Test
+    public void testSorting() {
+        Product product1 = new Product(null, "test-product1", "Siemens SXG75", new BigDecimal(150), usd, 120, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        Product product2 = new Product(null, "test-product2", "Apple IPhone 6", new BigDecimal(1000), usd, 130, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+
+        productDao.save(product1);
+        productDao.save(product2);
+
+        List<Product> sortByPriceAsc = productDao.findProducts(null, SortField.price, SortOrder.asc);
+        assertEquals(sortByPriceAsc.get(sortByPriceAsc.size() - 1), product2);
+
+        List<Product> sortByDescriptionDesc = productDao.findProducts(null, sortField, sortOrder);
+        assertEquals(sortByDescriptionDesc.get(1).getDescription(), product1.getDescription());
+    }
+
+
 }
