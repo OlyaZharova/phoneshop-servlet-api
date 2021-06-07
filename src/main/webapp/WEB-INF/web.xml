@@ -42,7 +42,7 @@
 
     <error-page>
         <location>/WEB-INF/pages/errorProductNotFound.jsp</location>
-        <exception-type>java.util.NoSuchElementException</exception-type>
+        <error-code>404</error-code>
     </error-page>
     <error-page>
         <location>/WEB-INF/pages/error.jsp</location>

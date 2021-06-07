@@ -1,24 +1,25 @@
 package com.es.phoneshop.model.product;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Currency;
 
 public class PriceHistory {
-    private String date;
+    private LocalDate date;
     private BigDecimal price;
     private Currency currency;
 
-    public PriceHistory(String date, BigDecimal price, Currency currency) {
+    public PriceHistory(LocalDate date, BigDecimal price, Currency currency) {
         this.date = date;
         this.price = price;
         this.currency = currency;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

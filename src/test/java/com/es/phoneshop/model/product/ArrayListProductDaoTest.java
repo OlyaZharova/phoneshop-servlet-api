@@ -1,9 +1,11 @@
 package com.es.phoneshop.model.product;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -25,14 +27,19 @@ public class ArrayListProductDaoTest {
         sortOrder = SortOrder.desc;
         usd = Currency.getInstance("USD");
         histories = new ArrayList<>();
-        histories.add(new PriceHistory("1 Set 2018", new BigDecimal(100), usd));
-        histories.add(new PriceHistory("10 Oct 2018", new BigDecimal(110), usd));
-        histories.add(new PriceHistory("10 Jan 2019", new BigDecimal(150), usd));
+        histories.add(new PriceHistory(LocalDate.of(2018, 9, 01), new BigDecimal(100), usd));
+        histories.add(new PriceHistory(LocalDate.of(2018, 10, 10), new BigDecimal(110), usd));
+        histories.add(new PriceHistory(LocalDate.of(2019, 1, 10), new BigDecimal(150), usd));
+    }
+
+    @After
+    public void cleanArray() {
+        productDao.deleteAll();
     }
 
     @Test
     public void testFindProductsNoResults() {
-        assertFalse(productDao.findProducts(null, sortField, sortOrder).isEmpty());
+        assertTrue(productDao.findProducts(null, sortField, sortOrder).isEmpty());
     }
 
     @Test
@@ -80,11 +87,10 @@ public class ArrayListProductDaoTest {
 
     @Test
     public void testDeleteNotExistingProduct() {
-        List<Product> listBeforeDelete = productDao.findProducts(null, sortField, sortOrder);
-        Product product = new Product(listBeforeDelete.get(listBeforeDelete.size() - 1).getId() + 1, "test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        Product product = new Product(1l, "test-product", "Siemens SXG75", new BigDecimal(160), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
         productDao.delete(product.getId());
         List<Product> listAfterDelete = productDao.findProducts(null, sortField, sortOrder);
-        assertEquals(listBeforeDelete.size(), listAfterDelete.size());
+        assertEquals(0, listAfterDelete.size());
     }
 
     @Test
@@ -124,10 +130,10 @@ public class ArrayListProductDaoTest {
         productDao.save(product2);
 
         List<Product> sortByPriceAsc = productDao.findProducts(null, SortField.price, SortOrder.asc);
-        assertEquals(sortByPriceAsc.get(sortByPriceAsc.size() - 1), product2);
+        assertEquals(sortByPriceAsc.get(1), product2);
 
         List<Product> sortByDescriptionDesc = productDao.findProducts(null, sortField, sortOrder);
-        assertEquals(sortByDescriptionDesc.get(1).getDescription(), product1.getDescription());
+        assertEquals(sortByDescriptionDesc.get(0).getDescription(), product1.getDescription());
     }
 
 

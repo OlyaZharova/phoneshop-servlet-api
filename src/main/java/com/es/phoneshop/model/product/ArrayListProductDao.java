@@ -43,32 +43,12 @@ public class ArrayListProductDao implements ProductDao {
                     .filter(product -> product.getStock() > 0)
                     .collect(Collectors.toList());
             if (query != null && !query.trim().isEmpty()) {
-                String[] quiries = query.split(" ");
-                List<Product> productsContainsQuery = new ArrayList<>();
-                for (Product product :
-                        allProducts) {
-                    String[] description = product.getDescription().split(" ");
-                    boolean contains = Arrays.asList(description).containsAll(Arrays.asList(quiries));
-                    if (contains) {
-                        productsContainsQuery.add(product);
-                    }
-                }
-                allProducts = productsContainsQuery;
-            }
-            Comparator<Product> comparatorField = Comparator.comparing(product -> {
-                if (sortField != null && SortField.description == sortField) {
-                    return (Comparable) product.getDescription();
-                } else {
-                    return (Comparable) product.getPrice();
-                }
-            });
-            Comparator<Product> comparatorOrder = comparatorField;
-            if (sortOrder != null && SortOrder.desc == sortOrder) {
-                comparatorOrder = comparatorField.reversed();
+                allProducts = products.stream()
+                        .filter(product -> getProductRelevancePoints(product, query) > 0)
+                        .collect(Collectors.toList());
             }
             return allProducts.stream()
-                    .sorted(comparatorField)
-                    .sorted(comparatorOrder)
+                    .sorted(getComparator(query, sortField, sortOrder))
                     .collect(Collectors.toList());
         } finally {
             rwl.readLock().unlock();
@@ -106,4 +86,48 @@ public class ArrayListProductDao implements ProductDao {
             rwl.writeLock().unlock();
         }
     }
+
+    private int getProductRelevancePoints(Product p, String query) {
+        int points = 0;
+        String[] queries = query.toLowerCase(Locale.ROOT).split(" ");
+        String[] description = p.getDescription().toLowerCase(Locale.ROOT).split(" ");
+        for (int i = 0; i < description.length; i++) {
+            for (int y = 0; y < queries.length; y++) {
+                if (description[i].equals(queries[y])) {
+                    points++;
+                }
+            }
+        }
+        return points;
+    }
+
+    private Comparator<Product> getComparator(String query, SortField sortField, SortOrder sortOrder) {
+        Comparator<Product> comparator = null;
+        comparator = Comparator.comparing(product -> {
+            if (sortField != null && SortField.description == sortField) {
+                return (Comparable) product.getDescription();
+            } else {
+                return (Comparable) product.getPrice();
+            }
+        });
+        if (sortOrder != null && SortOrder.desc == sortOrder) {
+            comparator = comparator.reversed();
+        }
+        if (query != null && !query.trim().isEmpty() && sortOrder == null && sortField == null) {
+            comparator = Comparator.comparingInt(product -> getProductRelevancePoints(product, query));
+            comparator = comparator.reversed();
+        }
+        return comparator;
+    }
+
+    @Override
+    public void deleteAll() {
+        rwl.writeLock().lock();
+        try {
+            products.clear();
+        } finally {
+            rwl.writeLock().unlock();
+        }
+    }
+
 }
