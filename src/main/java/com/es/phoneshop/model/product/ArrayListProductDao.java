@@ -9,7 +9,6 @@ public class ArrayListProductDao implements ProductDao {
     private long maxId;
     private List<Product> products;
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    private static ArrayListProductDao instance;
 
     private static class SingletonHelper{
         private static final ArrayListProductDao INSTANCE= new  ArrayListProductDao();
