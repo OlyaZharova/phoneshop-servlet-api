@@ -11,12 +11,14 @@ public class ArrayListProductDao implements ProductDao {
     private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private static ArrayListProductDao instance;
 
-    public static synchronized ArrayListProductDao getInstance() {
-        if (instance == null) {
-            instance = new ArrayListProductDao();
-        }
-        return instance;
+    private static class SingletonHelper{
+        private static final ArrayListProductDao INSTANCE= new  ArrayListProductDao();
     }
+
+    public static  ArrayListProductDao getInstance() {
+        return ArrayListProductDao.SingletonHelper.INSTANCE;
+    }
+
 
     public ArrayListProductDao() {
         products = new ArrayList<>();
