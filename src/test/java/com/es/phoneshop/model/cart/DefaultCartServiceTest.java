@@ -35,7 +35,7 @@ public class DefaultCartServiceTest {
     private static List<PriceHistory> histories;
     private Cart cart;
     private static ProductDao productDao;
-
+    private static long productId;
     @Mock
     private HttpServletRequest request;
     @Mock
@@ -45,13 +45,17 @@ public class DefaultCartServiceTest {
 
     private ProductDetailsPageServlet servlet = new ProductDetailsPageServlet();
 
+
     @BeforeClass
     public static void saveProduct() {
         productDao = ArrayListProductDao.getInstance();
         Currency usd = Currency.getInstance("USD");
         histories = new ArrayList<>();
-        productDao.save(new Product(null, "sgs", "Samsung Galaxy S", new BigDecimal(1000), usd, 100, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S.jpg", histories));
+        Product product = new Product(null, "sgs", "Samsung Galaxy S", new BigDecimal(1000), usd, 100, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S.jpg", histories);
+        productDao.save(product);
+        productId = product.getId();
     }
+
 
     @Before
     public void setup() throws ServletException {
@@ -65,16 +69,15 @@ public class DefaultCartServiceTest {
 
     @Test
     public void testAdd() throws OutOfStockException {
-        cartService.add(cart, 0l, 50);
-        Cart newCart = cartService.getCart(request);
-        assertFalse(newCart.getItems().isEmpty());
-        assertEquals(newCart.getItems().get(0).getQuantity(), 50);
+        cartService.add(cart, productId, 50);
+        assertFalse(cart.getItems().isEmpty());
+        assertEquals(cart.getItems().get(0).getQuantity(), 50);
     }
 
     @Test
     public void testAddQuantityMoreStock() {
         try {
-            cartService.add(cart, 0l, 110);
+            cartService.add(cart, productId, 110);
             Cart newCart = cartService.getCart(request);
             List<CartItem> cartItems = newCart.getItems();
             for (CartItem c :
@@ -89,9 +92,9 @@ public class DefaultCartServiceTest {
 
     @Test
     public void testCalculateStockAvailable() throws OutOfStockException {
-        cartService.add(cart, 0l, 10);
-        cartService.add(cart, 0l, 10);
-        Product product = productDao.getProduct(0l).get();
+        cartService.add(cart, productId, 10);
+        cartService.add(cart, productId, 10);
+        Product product = productDao.getProduct(productId).get();
         int result = cartService.calculateStockAvailable(product, cart);
         int expectedResult = product.getStock() - 10 - 10;
         assertEquals(result, expectedResult);
