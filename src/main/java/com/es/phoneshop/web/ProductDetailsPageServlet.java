@@ -36,7 +36,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
     }
 
     @Override
-    protected synchronized void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Long id = parseProductId(request);
         Optional<Product> productSearchResult = productDao.getProduct(id);
         if (productSearchResult.isPresent()) {
@@ -54,7 +54,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
     }
 
     @Override
-    protected synchronized void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String quantityString = request.getParameter("quantity");
         Long id = parseProductId(request);
@@ -63,6 +63,11 @@ public class ProductDetailsPageServlet extends HttpServlet {
         try {
             NumberFormat format = NumberFormat.getInstance(request.getLocale());
             quantity = format.parse(quantityString).intValue();
+            if (quantity < 1) {
+                request.setAttribute("error", "Number must be more than zero");
+                doGet(request, response);
+                return;
+            }
         } catch (ParseException e) {
             request.setAttribute("error", "Not a number");
             doGet(request, response);

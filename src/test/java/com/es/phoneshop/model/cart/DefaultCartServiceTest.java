@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,12 +79,6 @@ public class DefaultCartServiceTest {
     public void testAddQuantityMoreStock() {
         try {
             cartService.add(cart, productId, 110);
-            Cart newCart = cartService.getCart(request);
-            List<CartItem> cartItems = newCart.getItems();
-            for (CartItem c :
-                    cartItems) {
-                System.out.println(c.getProduct().getId() + "  " + c.getQuantity());
-            }
             fail("Expected OutOfStockException");
         } catch (OutOfStockException outOfStockException) {
             assertEquals(110, outOfStockException.getStockRequested());
@@ -91,13 +86,15 @@ public class DefaultCartServiceTest {
     }
 
     @Test
-    public void testCalculateStockAvailable() throws OutOfStockException {
+    public void testAddTwoSimilarProduct() throws OutOfStockException {
         cartService.add(cart, productId, 10);
         cartService.add(cart, productId, 10);
-        Product product = productDao.getProduct(productId).get();
-        int result = cartService.calculateStockAvailable(product, cart);
-        int expectedResult = product.getStock() - 10 - 10;
-        assertEquals(result, expectedResult);
+        Optional<CartItem> cartItem = cartService.getCart(request).getItems().stream()
+                .filter(cartItem1 -> cartItem1.getProduct().getId().equals(productId))
+                .findAny();
+        int quantity = cartItem.get().getQuantity();
+        int result = 20;
+        assertEquals(result, quantity);
     }
 
     @Test

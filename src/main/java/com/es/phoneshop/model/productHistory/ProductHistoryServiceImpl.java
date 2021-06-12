@@ -1,20 +1,17 @@
 package com.es.phoneshop.model.productHistory;
 
-import com.es.phoneshop.model.product.ArrayListProductDao;
+
 import com.es.phoneshop.model.product.Product;
-import com.es.phoneshop.model.product.ProductDao;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ProductHistoryServiceImpl implements ProductHistoryService {
 
-    private ProductDao productDao;
     private static final String PRODUCT_HISTORY_SESSION_ATTRIBUTE = ProductHistoryServiceImpl.class.getName() + ".history";
-
-    private ProductHistoryServiceImpl() {
-        productDao = ArrayListProductDao.getInstance();
-    }
+    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private static final int PRODUCT_HISTORY_SIZE = 3;
 
     private static class SingletonHelper {
         private static final ProductHistoryServiceImpl INSTANCE = new ProductHistoryServiceImpl();
@@ -27,24 +24,33 @@ public class ProductHistoryServiceImpl implements ProductHistoryService {
 
     @Override
     public ProductHistory getProductHistory(HttpServletRequest request) {
-        ProductHistory productHistory = (ProductHistory) request.getSession().getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE);
-        if (productHistory == null) {
-            request.getSession().setAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE, productHistory = new ProductHistory());
+        rwl.readLock().lock();
+        try {
+            ProductHistory productHistory = (ProductHistory) request.getSession().getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE);
+            if (productHistory == null) {
+                request.getSession().setAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE, productHistory = new ProductHistory());
+            }
+            return productHistory;
+        } finally {
+            rwl.readLock().unlock();
         }
-        return productHistory;
     }
 
     @Override
     public void add(ProductHistory productHistory, Product product) {
-        ConcurrentLinkedDeque<Product> products = productHistory.getProductHistory();
-        if (products.contains(product)) {
-            products.removeLastOccurrence(product);
-        }
-        products.addFirst(product);
-        if (products.size() > 3) {
-            products.removeLast();
+        rwl.writeLock().lock();
+        try {
+            ConcurrentLinkedDeque<Product> products = productHistory.getProductHistory();
+            if (products.contains(product)) {
+                products.removeLastOccurrence(product);
+            }
+            products.addFirst(product);
+            if (products.size() > PRODUCT_HISTORY_SIZE) {
+                products.removeLast();
+            }
+        } finally {
+            rwl.writeLock().unlock();
         }
     }
-
 }
 
