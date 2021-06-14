@@ -43,4 +43,5 @@
       </tr>
     </c:forEach>
   </table>
+  <tags:productHistory productHistory="${productHistory}"/>
 </tags:master>
