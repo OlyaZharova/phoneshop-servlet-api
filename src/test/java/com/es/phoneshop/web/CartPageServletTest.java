@@ -3,10 +3,12 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.cart.Cart;
 import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.product.ArrayListProductDao;
+import com.es.phoneshop.model.product.PriceHistory;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
 import com.es.phoneshop.model.productHistory.ProductHistory;
 import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
+import javafx.scene.canvas.GraphicsContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,15 +24,17 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ProductListPageServletTest {
+public class CartPageServletTest {
+
     @Mock
     private HttpServletRequest request;
     @Mock
@@ -42,40 +46,38 @@ public class ProductListPageServletTest {
     @Mock
     private HttpSession session;
 
-    private ProductListPageServlet servlet = new ProductListPageServlet();
-    private ProductHistory productHistory = new ProductHistory();
-    private static final String PRODUCT_HISTORY_SESSION_ATTRIBUTE = ProductHistoryServiceImpl.class.getName() + ".history";
-    private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
+    private CartPageServlet servlet = new CartPageServlet();
     private Cart cart;
+    private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
+    private String[] productIds = new String[1];
     private ProductDao productDao;
 
     @Before
     public void setup() throws ServletException {
         productDao = ArrayListProductDao.getInstance();
         Currency usd = Currency.getInstance("USD");
+        cart = new Cart();
         Product product = new Product(null, "sgs", "Samsung Galaxy S", new BigDecimal(1000), usd, 100, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S.jpg", null);
         productDao.save(product);
-        cart = new Cart();
+        productIds[0] = product.getId().toString();
         servlet.init(servletConfig);
         when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
         when(request.getSession()).thenReturn(session);
-        when(session.getAttribute(anyString())).thenReturn(productHistory);
-        when(request.getParameter("productId")).thenReturn(product.getId().toString());
-        when(session.getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE)).thenReturn(productHistory);
         when(session.getAttribute(CART_SESSION_ATTRIBUTE)).thenReturn(cart);
+        when(request.getParameterValues("productId")).thenReturn(productIds);
     }
 
     @Test
     public void testDoGet() throws ServletException, IOException {
         servlet.doGet(request, response);
         verify(requestDispatcher).forward(request, response);
-        verify(request).setAttribute(eq("products"), any());
-        verify(request).setAttribute(eq("productHistory"), any());
+        verify(request).setAttribute(eq("cart"), any());
     }
 
     @Test
     public void testDoPost() throws ServletException, IOException, ParseException {
-        when(request.getParameter("quantity")).thenReturn("10");
+        String[] quantities = {"10"};
+        when(request.getParameterValues("quantity")).thenReturn(quantities);
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
         servlet.doPost(request, response);
         verify(response).sendRedirect(anyString());
@@ -83,25 +85,33 @@ public class ProductListPageServletTest {
 
     @Test
     public void testIncorrectQuantity() throws ServletException, IOException {
+        String[] quantities = {"fff"};
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
-        when(request.getParameter("quantity")).thenReturn("ffff");
+        when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
-        verify(request).setAttribute(eq("errors"), any());
+        verify(request, times(2)).setAttribute(anyString(), any());
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
+
     }
 
     @Test
     public void testQuantityLessThanOne() throws ServletException, IOException {
+        String[] quantities = {"0"};
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
-        when(request.getParameter("quantity")).thenReturn("0");
+        when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
-        verify(request).setAttribute(eq("errors"), any());
+        verify(request, times(2)).setAttribute(anyString(), any());
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
 
     @Test
     public void testQuantityMoreStock() throws ServletException, IOException {
+        String[] quantities = {"1000"};
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
-        when(request.getParameter("quantity")).thenReturn("1000");
+        when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
-        verify(request).setAttribute(eq("errors"), any());
+        verify(request, times(2)).setAttribute(anyString(), any());
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
+
 }

@@ -79,7 +79,6 @@ public class ProductDetailsPageServletTest {
 
     @Test
     public void testDoPost() throws ServletException, IOException, ParseException {
-
         when(request.getParameter("quantity")).thenReturn("10");
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
         servlet.doPost(request, response);
@@ -90,6 +89,14 @@ public class ProductDetailsPageServletTest {
     public void testIncorrectQuantity() throws ServletException, IOException {
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("ffff");
+        servlet.doPost(request, response);
+        verify(request, times(4)).setAttribute(anyString(), any());
+    }
+
+    @Test
+    public void testQuantityLessThanOne() throws ServletException, IOException {
+        when(request.getLocale()).thenReturn(Locale.ENGLISH);
+        when(request.getParameter("quantity")).thenReturn("0");
         servlet.doPost(request, response);
         verify(request, times(4)).setAttribute(anyString(), any());
     }

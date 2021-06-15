@@ -5,8 +5,10 @@ import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class DefaultCartService implements CartService {
 
@@ -63,9 +65,51 @@ public class DefaultCartService implements CartService {
                     cart.getItems().add(new CartItem(product, quantity));
                 }
             }
+            recalculateCart(cart);
         } finally {
             rwl.writeLock().unlock();
         }
     }
 
+    @Override
+    public void update(Cart cart, Long productId, int quantity) throws OutOfStockException {
+        rwl.writeLock().lock();
+        try {
+            Optional<Product> searchProduct = productDao.getProduct(productId);
+            if (searchProduct.isPresent()) {
+                Product product = searchProduct.get();
+                if (product.getStock() < quantity) {
+                    throw new OutOfStockException(product, quantity, product.getStock());
+                } else {
+                    cart.getItems().stream()
+                            .filter(cartItem -> cartItem.getProduct().equals(product))
+                            .forEach(cartItem -> cartItem.setQuantity(quantity));
+                }
+            }
+            recalculateCart(cart);
+        } finally {
+            rwl.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void delete(Cart cart, Long productId) {
+        rwl.writeLock().lock();
+        try {
+            cart.getItems().removeIf(cartItem ->
+                    productId.equals(cartItem.getProduct().getId()));
+            recalculateCart(cart);
+        } finally {
+            rwl.writeLock().unlock();
+        }
+    }
+
+    private void recalculateCart(Cart cart) {
+        cart.setTotalQuantity(cart.getItems().stream()
+                .map(CartItem::getQuantity)
+                .collect(Collectors.summingInt(q -> q.intValue())));
+        cart.setTotalCost(cart.getItems().stream()
+                .map(cartItem -> cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+    }
 }

@@ -98,7 +98,7 @@ public class DefaultCartServiceTest {
     }
 
     @Test
-    public void testGetProductHistory() {
+    public void testGetCart() {
         cartService.getCart(request);
         verify(session).getAttribute(anyString());
     }
@@ -109,6 +109,38 @@ public class DefaultCartServiceTest {
         Cart newCart = cartService.getCart(request);
         verify(session).setAttribute(anyString(), any());
         assertTrue(newCart.getItems().isEmpty());
+    }
+
+    @Test
+    public void testUpdate() throws OutOfStockException{
+        cartService.add(cart, productId, 50);
+        cartService.update(cart, productId, 30);
+        assertFalse(cart.getItems().isEmpty());
+        assertEquals(cart.getItems().get(0).getQuantity(), 30);
+    }
+
+    @Test
+    public void testUpdateQuantityMoreStock() {
+        try {
+            cartService.add(cart, productId, 50);
+            cartService.update(cart, productId, 110);
+            fail("Expected OutOfStockException");
+        } catch (OutOfStockException outOfStockException) {
+            assertEquals(110, outOfStockException.getStockRequested());
+        }
+    }
+    @Test
+    public void testDelete() throws OutOfStockException {
+        cartService.add(cart, productId, 50);
+        cartService.delete(cart, productId);
+        assertTrue(cart.getItems().isEmpty());
+    }
+
+    @Test
+    public void testRecalculateCart() throws OutOfStockException {
+        cartService.add(cart, productId, 5);
+        assertEquals(cart.getTotalCost(),new BigDecimal(5000) );
+        assertEquals(cart.getTotalQuantity(), 5);
     }
 
 }
