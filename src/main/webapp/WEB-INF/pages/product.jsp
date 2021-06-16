@@ -5,9 +5,6 @@
 
 <jsp:useBean id="product" type="com.es.phoneshop.model.product.Product" scope="request"/>
 <tags:master pageTitle="Product Details">
-    <p>
-        Cart: ${cart}
-    </p>
     <c:if test="${not empty param.message}">
         <div class="success">
                 ${param.message}
@@ -21,7 +18,7 @@
     <p>
             ${product.description}
     </p>
-    <form method="post" action="${pageContext.servletContext.contextPath}/product/${product.id}">
+    <form method="post">
         <table>
             <tr>
                 <td>Image</td>

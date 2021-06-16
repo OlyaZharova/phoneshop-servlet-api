@@ -26,8 +26,7 @@ import java.util.Currency;
 import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductListPageServletTest {
@@ -63,6 +62,7 @@ public class ProductListPageServletTest {
         when(request.getParameter("productId")).thenReturn(product.getId().toString());
         when(session.getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE)).thenReturn(productHistory);
         when(session.getAttribute(CART_SESSION_ATTRIBUTE)).thenReturn(cart);
+        when(request.getLocale()).thenReturn(Locale.ENGLISH);
     }
 
     @Test
@@ -76,14 +76,12 @@ public class ProductListPageServletTest {
     @Test
     public void testDoPost() throws ServletException, IOException, ParseException {
         when(request.getParameter("quantity")).thenReturn("10");
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         servlet.doPost(request, response);
         verify(response).sendRedirect(anyString());
     }
 
     @Test
     public void testIncorrectQuantity() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("ffff");
         servlet.doPost(request, response);
         verify(request).setAttribute(eq("errors"), any());
@@ -91,7 +89,6 @@ public class ProductListPageServletTest {
 
     @Test
     public void testQuantityLessThanOne() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("0");
         servlet.doPost(request, response);
         verify(request).setAttribute(eq("errors"), any());
@@ -99,9 +96,17 @@ public class ProductListPageServletTest {
 
     @Test
     public void testQuantityMoreStock() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("1000");
         servlet.doPost(request, response);
         verify(request).setAttribute(eq("errors"), any());
+    }
+
+    @Test
+    public void testProductNotFound() throws ServletException, IOException {
+        when(request.getParameter("productId")).thenReturn("-1");
+        when(request.getParameter("quantity")).thenReturn("10");
+        servlet.doPost(request, response);
+        verify(request).setAttribute(eq("errors"), any());
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
 }

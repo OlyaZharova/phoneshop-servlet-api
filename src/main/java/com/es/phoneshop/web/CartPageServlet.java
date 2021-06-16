@@ -4,6 +4,7 @@ import com.es.phoneshop.model.cart.Cart;
 import com.es.phoneshop.model.cart.CartService;
 import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.cart.OutOfStockException;
+import com.es.phoneshop.model.product.ProductNotFoundException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -41,7 +42,7 @@ public class CartPageServlet extends HttpServlet {
         String[] quantities = request.getParameterValues("quantity");
 
         Map<Long, String> errors = new HashMap<>();
-
+        Cart cart = cartService.getCart(request);
         for (int i = 0; i < productIds.length; i++) {
             Long productId = Long.valueOf(productIds[i]);
             int quantity;
@@ -49,16 +50,21 @@ public class CartPageServlet extends HttpServlet {
                 quantity = getQuantity(quantities[i], request);
                 if (quantity < 1) {
                     errors.put(productId, "Number must be more than zero");
+                } else {
+                    cartService.update(cart, productId, quantity);
                 }
-                Cart cart = cartService.getCart(request);
-                cartService.update(cart, productId, quantity);
             } catch (ParseException e) {
                 errors.put(productId, "Not a number");
             } catch (OutOfStockException e) {
                 errors.put(productId, "Out of stock, available " + e.getStockAvailable());
+            } catch (ProductNotFoundException e) {
+                errors.put(productId, "Product not found");
             }
         }
         if (errors.isEmpty()) {
+            response.setHeader("Cache-control", "no-cache, no-store");
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Expires", "-1");
             response.sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
         } else {
             request.setAttribute("errors", errors);
@@ -67,7 +73,12 @@ public class CartPageServlet extends HttpServlet {
     }
 
     private int getQuantity(String quantityString, HttpServletRequest request) throws ParseException {
-        NumberFormat format = NumberFormat.getInstance(request.getLocale());
-        return format.parse(quantityString).intValue();
+        boolean flag = quantityString.matches("\\d+");
+        if (flag) {
+            NumberFormat format = NumberFormat.getInstance(request.getLocale());
+            return format.parse(quantityString).intValue();
+        } else {
+            throw new ParseException(quantityString, -1);
+        }
     }
 }

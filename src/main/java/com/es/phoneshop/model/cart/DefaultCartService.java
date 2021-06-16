@@ -3,6 +3,7 @@ package com.es.phoneshop.model.cart;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.ProductNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -44,7 +45,7 @@ public class DefaultCartService implements CartService {
     }
 
     @Override
-    public void add(Cart cart, Long productId, int quantity) throws OutOfStockException {
+    public void add(Cart cart, Long productId, int quantity) throws OutOfStockException, ProductNotFoundException {
         rwl.writeLock().lock();
         try {
             Optional<Product> searchProduct = productDao.getProduct(productId);
@@ -64,6 +65,8 @@ public class DefaultCartService implements CartService {
                 } else {
                     cart.getItems().add(new CartItem(product, quantity));
                 }
+            } else {
+                throw new ProductNotFoundException();
             }
             recalculateCart(cart);
         } finally {
@@ -72,7 +75,7 @@ public class DefaultCartService implements CartService {
     }
 
     @Override
-    public void update(Cart cart, Long productId, int quantity) throws OutOfStockException {
+    public void update(Cart cart, Long productId, int quantity) throws OutOfStockException, ProductNotFoundException {
         rwl.writeLock().lock();
         try {
             Optional<Product> searchProduct = productDao.getProduct(productId);
@@ -82,9 +85,11 @@ public class DefaultCartService implements CartService {
                     throw new OutOfStockException(product, quantity, product.getStock());
                 } else {
                     cart.getItems().stream()
-                            .filter(cartItem -> cartItem.getProduct().equals(product))
+                            .filter(cartItem -> cartItem.getProduct().getId().equals(product.getId()))
                             .forEach(cartItem -> cartItem.setQuantity(quantity));
                 }
+            } else {
+                throw new ProductNotFoundException();
             }
             recalculateCart(cart);
         } finally {

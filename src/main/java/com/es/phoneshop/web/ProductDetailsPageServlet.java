@@ -7,6 +7,7 @@ import com.es.phoneshop.model.cart.OutOfStockException;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.ProductNotFoundException;
 import com.es.phoneshop.model.productHistory.ProductHistory;
 import com.es.phoneshop.model.productHistory.ProductHistoryService;
 import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
@@ -61,8 +62,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
 
         int quantity;
         try {
-            NumberFormat format = NumberFormat.getInstance(request.getLocale());
-            quantity = format.parse(quantityString).intValue();
+            quantity = getQuantity(quantityString, request);
             if (quantity < 1) {
                 request.setAttribute("error", "Number must be more than zero");
                 doGet(request, response);
@@ -81,6 +81,10 @@ public class ProductDetailsPageServlet extends HttpServlet {
             request.setAttribute("error", "Out of stock, available " + e.getStockAvailable());
             doGet(request, response);
             return;
+        } catch (ProductNotFoundException e) {
+            request.setAttribute("error", "Product not found");
+            doGet(request, response);
+            return;
         }
 
         response.sendRedirect(request.getContextPath() + "/products/" + id + "?message=Product added to cart");
@@ -89,5 +93,15 @@ public class ProductDetailsPageServlet extends HttpServlet {
     private Long parseProductId(HttpServletRequest request) {
         String productInfo = request.getPathInfo().substring(1);
         return Long.valueOf(productInfo);
+    }
+
+    private int getQuantity(String quantityString, HttpServletRequest request) throws ParseException {
+        boolean flag = quantityString.matches("\\d+");
+        if (flag) {
+            NumberFormat format = NumberFormat.getInstance(request.getLocale());
+            return format.parse(quantityString).intValue();
+        } else {
+            throw new ParseException(quantityString, -1);
+        }
     }
 }

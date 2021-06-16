@@ -4,10 +4,7 @@ import com.es.phoneshop.model.cart.Cart;
 import com.es.phoneshop.model.cart.CartService;
 import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.cart.OutOfStockException;
-import com.es.phoneshop.model.product.ArrayListProductDao;
-import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.SortField;
-import com.es.phoneshop.model.product.SortOrder;
+import com.es.phoneshop.model.product.*;
 import com.es.phoneshop.model.productHistory.ProductHistory;
 import com.es.phoneshop.model.productHistory.ProductHistoryService;
 import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
@@ -61,8 +58,7 @@ public class ProductListPageServlet extends HttpServlet {
         String quantityString = request.getParameter("quantity");
         int quantity;
         try {
-            NumberFormat format = NumberFormat.getInstance(request.getLocale());
-            quantity = format.parse(quantityString).intValue();
+            quantity = getQuantity(quantityString, request);
             Cart cart = cartService.getCart(request);
             cartService.add(cart, productId, quantity);
             if (quantity < 1) {
@@ -72,6 +68,8 @@ public class ProductListPageServlet extends HttpServlet {
             errors.put(productId, "Not a number");
         } catch (OutOfStockException outOfStockException) {
             errors.put(productId, "Out of stock, available " + outOfStockException.getStockAvailable());
+        } catch (ProductNotFoundException productNotFoundException) {
+            errors.put(productId, "Product not found ");
         }
 
         if (errors.isEmpty()) {
@@ -79,6 +77,16 @@ public class ProductListPageServlet extends HttpServlet {
         } else {
             request.setAttribute("errors", errors);
             doGet(request, response);
+        }
+    }
+
+    private int getQuantity(String quantityString, HttpServletRequest request) throws ParseException {
+        boolean flag = quantityString.matches("\\d+");
+        if (flag) {
+            NumberFormat format = NumberFormat.getInstance(request.getLocale());
+            return format.parse(quantityString).intValue();
+        } else {
+            throw new ParseException(quantityString, -1);
         }
     }
 }

@@ -3,12 +3,8 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.cart.Cart;
 import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.product.ArrayListProductDao;
-import com.es.phoneshop.model.product.PriceHistory;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.productHistory.ProductHistory;
-import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
-import javafx.scene.canvas.GraphicsContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,9 +20,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Currency;
-import java.util.List;
 import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -65,6 +59,7 @@ public class CartPageServletTest {
         when(request.getSession()).thenReturn(session);
         when(session.getAttribute(CART_SESSION_ATTRIBUTE)).thenReturn(cart);
         when(request.getParameterValues("productId")).thenReturn(productIds);
+        when(request.getLocale()).thenReturn(Locale.ENGLISH);
     }
 
     @Test
@@ -78,7 +73,6 @@ public class CartPageServletTest {
     public void testDoPost() throws ServletException, IOException, ParseException {
         String[] quantities = {"10"};
         when(request.getParameterValues("quantity")).thenReturn(quantities);
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         servlet.doPost(request, response);
         verify(response).sendRedirect(anyString());
     }
@@ -86,7 +80,6 @@ public class CartPageServletTest {
     @Test
     public void testIncorrectQuantity() throws ServletException, IOException {
         String[] quantities = {"fff"};
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
         verify(request, times(2)).setAttribute(anyString(), any());
@@ -97,7 +90,6 @@ public class CartPageServletTest {
     @Test
     public void testQuantityLessThanOne() throws ServletException, IOException {
         String[] quantities = {"0"};
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
         verify(request, times(2)).setAttribute(anyString(), any());
@@ -107,11 +99,22 @@ public class CartPageServletTest {
     @Test
     public void testQuantityMoreStock() throws ServletException, IOException {
         String[] quantities = {"1000"};
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameterValues("quantity")).thenReturn(quantities);
         servlet.doPost(request, response);
         verify(request, times(2)).setAttribute(anyString(), any());
         verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
+
+    @Test
+    public void testProductNotFound() throws ServletException, IOException {
+        String[] quantities = {"1000"};
+        String[] productIds = {"-1"};
+        when(request.getParameterValues("quantity")).thenReturn(quantities);
+        when(request.getParameterValues("productId")).thenReturn(productIds);
+        servlet.doPost(request, response);
+        verify(request, times(2)).setAttribute(anyString(), any());
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
+    }
+
 
 }

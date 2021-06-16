@@ -66,6 +66,7 @@ public class ProductDetailsPageServletTest {
         when(session.getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE)).thenReturn(productHistory);
         when(session.getAttribute(CART_SESSION_ATTRIBUTE)).thenReturn(cart);
         when(request.getPathInfo()).thenReturn("/0");
+        when(request.getLocale()).thenReturn(Locale.ENGLISH);
     }
 
     @Test
@@ -80,30 +81,26 @@ public class ProductDetailsPageServletTest {
     @Test
     public void testDoPost() throws ServletException, IOException, ParseException {
         when(request.getParameter("quantity")).thenReturn("10");
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         servlet.doPost(request, response);
         verify(response).sendRedirect(anyString());
     }
 
     @Test
     public void testIncorrectQuantity() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("ffff");
         servlet.doPost(request, response);
-        verify(request, times(4)).setAttribute(anyString(), any());
+        verify(request).setAttribute("error", "Not a number");
     }
 
     @Test
     public void testQuantityLessThanOne() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("0");
         servlet.doPost(request, response);
-        verify(request, times(4)).setAttribute(anyString(), any());
+        verify(request).setAttribute("error", "Number must be more than zero");
     }
 
     @Test
     public void testQuantityMoreStock() throws ServletException, IOException {
-        when(request.getLocale()).thenReturn(Locale.ENGLISH);
         when(request.getParameter("quantity")).thenReturn("1000");
         servlet.doPost(request, response);
         verify(request, times(4)).setAttribute(anyString(), any());
@@ -114,6 +111,15 @@ public class ProductDetailsPageServletTest {
         when(request.getPathInfo()).thenReturn("/1");
         servlet.doGet(request, response);
         verify(response).sendError(404);
+    }
+
+    @Test
+    public void testProductNotFound() throws ServletException, IOException {
+        when(request.getPathInfo()).thenReturn("/-1");
+        when(request.getParameter("quantity")).thenReturn("10");
+        servlet.doPost(request, response);
+        verify(request).setAttribute("error", "Product not found");
+        verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
 
 }
