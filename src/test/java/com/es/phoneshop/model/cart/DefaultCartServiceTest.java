@@ -140,5 +140,4 @@ public class DefaultCartServiceTest {
         assertEquals(cart.getTotalCost(), new BigDecimal(5000));
         assertEquals(cart.getTotalQuantity(), 5);
     }
-
 }

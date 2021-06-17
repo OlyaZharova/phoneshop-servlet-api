@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+
 public class DefaultCartService implements CartService {
 
     private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
@@ -46,6 +47,7 @@ public class DefaultCartService implements CartService {
 
     @Override
     public void add(Cart cart, Long productId, int quantity) throws OutOfStockException, ProductNotFoundException {
+
         rwl.writeLock().lock();
         try {
             Optional<Product> searchProduct = productDao.getProduct(productId);

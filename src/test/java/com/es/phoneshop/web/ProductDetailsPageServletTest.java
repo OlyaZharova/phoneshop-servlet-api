@@ -121,5 +121,4 @@ public class ProductDetailsPageServletTest {
         verify(request).setAttribute("error", "Product not found");
         verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
-
 }

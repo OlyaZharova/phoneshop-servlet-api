@@ -3,6 +3,7 @@ package com.es.phoneshop.model.productHistory;
 
 import com.es.phoneshop.model.product.Product;
 
+
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
