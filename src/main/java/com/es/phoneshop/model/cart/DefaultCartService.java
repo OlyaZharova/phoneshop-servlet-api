@@ -33,15 +33,20 @@ public class DefaultCartService implements CartService {
 
     @Override
     public Cart getCart(HttpServletRequest request) {
-        rwl.writeLock().lock();
+        rwl.readLock().lock();
         try {
             Cart cart = (Cart) request.getSession().getAttribute(CART_SESSION_ATTRIBUTE);
             if (cart == null) {
+                rwl.writeLock().lock();
+                try {
                 request.getSession().setAttribute(CART_SESSION_ATTRIBUTE, cart = new Cart());
+                } finally {
+                    rwl.writeLock().unlock();
+                }
             }
             return cart;
         } finally {
-            rwl.writeLock().unlock();
+            rwl.readLock().unlock();
         }
     }
 
