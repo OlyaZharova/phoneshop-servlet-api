@@ -3,6 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="tags" tagdir="/WEB-INF/tags" %>
 
-<tags:master pageTitle="Error">
-    <h1>Sorry an error occurred</h1>
-</tags:master>
+<jsp:useBean id="cart" type="com.es.phoneshop.model.cart.Cart" scope="request"/>
+<a href="${pageContext.servletContext.contextPath}/cart">
+Cart: ${cart.totalQuantity} totalQuantity, ${cart.totalCost} totalCost
+</a>

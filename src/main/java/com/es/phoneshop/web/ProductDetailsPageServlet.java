@@ -7,9 +7,11 @@ import com.es.phoneshop.model.cart.OutOfStockException;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.ProductNotFoundException;
 import com.es.phoneshop.model.productHistory.ProductHistory;
 import com.es.phoneshop.model.productHistory.ProductHistoryService;
 import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
+import com.es.phoneshop.util.QuantityUtility;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,7 +19,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Optional;
 
@@ -61,8 +62,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
 
         int quantity;
         try {
-            NumberFormat format = NumberFormat.getInstance(request.getLocale());
-            quantity = format.parse(quantityString).intValue();
+            quantity = QuantityUtility.getQuantity(quantityString, request);
             if (quantity < 1) {
                 request.setAttribute("error", "Number must be more than zero");
                 doGet(request, response);
@@ -79,6 +79,10 @@ public class ProductDetailsPageServlet extends HttpServlet {
             cartService.add(cart, id, quantity);
         } catch (OutOfStockException e) {
             request.setAttribute("error", "Out of stock, available " + e.getStockAvailable());
+            doGet(request, response);
+            return;
+        } catch (ProductNotFoundException e) {
+            request.setAttribute("error", "Product not found");
             doGet(request, response);
             return;
         }
