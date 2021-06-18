@@ -5,6 +5,7 @@ import com.es.phoneshop.model.cart.CartService;
 import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.cart.OutOfStockException;
 import com.es.phoneshop.model.product.ProductNotFoundException;
+import com.es.phoneshop.util.QuantityUtility;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -12,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +32,9 @@ public class CartPageServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Cart cart = cartService.getCart(request);
         request.setAttribute("cart", cart);
+        response.setHeader("Cache-control", "no-cache, no-store");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "-1");
         request.getRequestDispatcher("/WEB-INF/pages/cart.jsp").forward(request, response);
     }
 
@@ -47,7 +50,7 @@ public class CartPageServlet extends HttpServlet {
             Long productId = Long.valueOf(productIds[i]);
             int quantity;
             try {
-                quantity = getQuantity(quantities[i], request);
+                quantity = QuantityUtility.getQuantity(quantities[i], request);
                 if (quantity < 1) {
                     errors.put(productId, "Number must be more than zero");
                 } else {
@@ -62,9 +65,6 @@ public class CartPageServlet extends HttpServlet {
             }
         }
         if (errors.isEmpty()) {
-            response.setHeader("Cache-control", "no-cache, no-store");
-            response.setHeader("Pragma", "no-cache");
-            response.setHeader("Expires", "-1");
             response.sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
         } else {
             request.setAttribute("errors", errors);
@@ -72,13 +72,4 @@ public class CartPageServlet extends HttpServlet {
         }
     }
 
-    private int getQuantity(String quantityString, HttpServletRequest request) throws ParseException {
-        boolean flag = quantityString.matches("\\d+");
-        if (flag) {
-            NumberFormat format = NumberFormat.getInstance(request.getLocale());
-            return format.parse(quantityString).intValue();
-        } else {
-            throw new ParseException(quantityString, -1);
-        }
-    }
 }

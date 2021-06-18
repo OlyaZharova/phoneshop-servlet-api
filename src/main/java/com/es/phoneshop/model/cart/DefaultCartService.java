@@ -33,7 +33,7 @@ public class DefaultCartService implements CartService {
 
     @Override
     public Cart getCart(HttpServletRequest request) {
-        rwl.readLock().lock();
+        rwl.writeLock().lock();
         try {
             Cart cart = (Cart) request.getSession().getAttribute(CART_SESSION_ATTRIBUTE);
             if (cart == null) {
@@ -41,7 +41,7 @@ public class DefaultCartService implements CartService {
             }
             return cart;
         } finally {
-            rwl.readLock().unlock();
+            rwl.writeLock().unlock();
         }
     }
 

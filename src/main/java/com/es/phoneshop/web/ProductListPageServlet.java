@@ -9,6 +9,7 @@ import com.es.phoneshop.model.product.*;
 import com.es.phoneshop.model.productHistory.ProductHistory;
 import com.es.phoneshop.model.productHistory.ProductHistoryService;
 import com.es.phoneshop.model.productHistory.ProductHistoryServiceImpl;
+import com.es.phoneshop.util.QuantityUtility;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -16,7 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class ProductListPageServlet extends HttpServlet {
         String quantityString = request.getParameter("quantity");
         int quantity;
         try {
-            quantity = getQuantity(quantityString, request);
+            quantity = QuantityUtility.getQuantity(quantityString, request);
             Cart cart = cartService.getCart(request);
             cartService.add(cart, productId, quantity);
             if (quantity < 1) {
@@ -78,16 +78,6 @@ public class ProductListPageServlet extends HttpServlet {
         } else {
             request.setAttribute("errors", errors);
             doGet(request, response);
-        }
-    }
-
-    private int getQuantity(String quantityString, HttpServletRequest request) throws ParseException {
-        boolean flag = quantityString.matches("\\d+");
-        if (flag) {
-            NumberFormat format = NumberFormat.getInstance(request.getLocale());
-            return format.parse(quantityString).intValue();
-        } else {
-            throw new ParseException(quantityString, -1);
         }
     }
 }
