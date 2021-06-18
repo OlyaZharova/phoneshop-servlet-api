@@ -37,6 +37,7 @@ public class DefaultCartService implements CartService {
         if (cart == null) {
             rwl.writeLock().lock();
             try {
+                cart = (Cart) request.getSession().getAttribute(CART_SESSION_ATTRIBUTE);
                 if (cart == null) {
                     request.getSession().setAttribute(CART_SESSION_ATTRIBUTE, cart = new Cart());
                 }
@@ -49,7 +50,6 @@ public class DefaultCartService implements CartService {
 
     @Override
     public void add(Cart cart, Long productId, int quantity) throws OutOfStockException, ProductNotFoundException {
-
         rwl.writeLock().lock();
         try {
             Optional<Product> searchProduct = productDao.getProduct(productId);
