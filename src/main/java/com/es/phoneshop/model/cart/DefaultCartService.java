@@ -121,4 +121,16 @@ public class DefaultCartService implements CartService {
                 .map(cartItem -> cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
+
+    @Override
+    public void clearCart(Cart cart) {
+        rwl.writeLock().lock();
+        try {
+            cart.getItems().clear();
+            cart.setTotalCost(BigDecimal.ZERO);
+            cart.setTotalQuantity(0);
+        } finally {
+            rwl.writeLock().unlock();
+        }
+    }
 }

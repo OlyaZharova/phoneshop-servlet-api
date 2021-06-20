@@ -4,7 +4,6 @@ import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.PriceHistory;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.productHistory.ProductHistory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +38,6 @@ public class PriceHistoryPageServletTest {
     private ServletConfig servletConfig;
 
     private PriceHistoryPageServlet servlet = new PriceHistoryPageServlet();
-    private ProductHistory productHistory = new ProductHistory();
     private List<PriceHistory> histories;
     private ProductDao productDao;
 
@@ -48,10 +46,12 @@ public class PriceHistoryPageServletTest {
         productDao = ArrayListProductDao.getInstance();
         Currency usd = Currency.getInstance("USD");
         histories = new ArrayList<>();
-        productDao.save(new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories));
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        productDao.save(product);
+        Long productId = product.getId();
         servlet.init(servletConfig);
         when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
-        when(request.getPathInfo()).thenReturn("/0");
+        when(request.getPathInfo()).thenReturn("/"+productId);
     }
 
     @Test
@@ -60,6 +60,4 @@ public class PriceHistoryPageServletTest {
         verify(requestDispatcher).forward(request, response);
         verify(request).setAttribute(eq("product"), any());
     }
-
-
 }

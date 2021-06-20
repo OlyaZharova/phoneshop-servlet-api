@@ -2,6 +2,7 @@ package com.es.phoneshop.model.cart;
 
 import com.es.phoneshop.model.product.*;
 import com.es.phoneshop.web.ProductDetailsPageServlet;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,6 +34,7 @@ public class DefaultCartServiceTest {
     private static List<PriceHistory> histories;
     private Cart cart;
     private static ProductDao productDao;
+    private static long incorrectProductId;
     private static long productId;
     @Mock
     private HttpServletRequest request;
@@ -52,6 +54,12 @@ public class DefaultCartServiceTest {
         Product product = new Product(null, "sgs", "Samsung Galaxy S", new BigDecimal(1000), usd, 100, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Samsung/Samsung%20Galaxy%20S.jpg", histories);
         productDao.save(product);
         productId = product.getId();
+        incorrectProductId = productId + 1;
+    }
+
+    @AfterClass
+    public static void deleteProduct() {
+        productDao.deleteAll();
     }
 
 
@@ -70,6 +78,16 @@ public class DefaultCartServiceTest {
         cartService.add(cart, productId, 50);
         assertFalse(cart.getItems().isEmpty());
         assertEquals(cart.getItems().get(0).getQuantity(), 50);
+    }
+
+    @Test
+    public void testAddNonExistentProduct() throws OutOfStockException {
+        try {
+            cartService.add(cart, incorrectProductId, 50);
+            fail("Expected ProductNotFoundException");
+        } catch (ProductNotFoundException productNotFoundException) {
+            assertNotEquals("", productNotFoundException.getMessage());
+        }
     }
 
     @Test
@@ -117,6 +135,16 @@ public class DefaultCartServiceTest {
     }
 
     @Test
+    public void testUpdateNonExistentProduct() throws OutOfStockException {
+        try {
+            cartService.update(cart, incorrectProductId, 50);
+            fail("Expected ProductNotFoundException");
+        } catch (ProductNotFoundException productNotFoundException) {
+            assertNotEquals("", productNotFoundException.getMessage());
+        }
+    }
+
+    @Test
     public void testUpdateQuantityMoreStock() throws ProductNotFoundException {
         try {
             cartService.add(cart, productId, 50);
@@ -139,5 +167,13 @@ public class DefaultCartServiceTest {
         cartService.add(cart, productId, 5);
         assertEquals(cart.getTotalCost(), new BigDecimal(5000));
         assertEquals(cart.getTotalQuantity(), 5);
+    }
+
+    @Test
+    public void testClearCart() {
+        cartService.clearCart(cart);
+        assertEquals(cart.getTotalCost(), BigDecimal.ZERO);
+        assertEquals(cart.getTotalQuantity(), 0);
+        assertTrue(cart.getItems().isEmpty());
     }
 }

@@ -19,6 +19,10 @@ public class Cart implements Serializable {
         return items;
     }
 
+    public void setItems(List<CartItem> items) {
+        this.items = items;
+    }
+
     public void setTotalQuantity(int totalQuantity) {
         this.totalQuantity = totalQuantity;
     }

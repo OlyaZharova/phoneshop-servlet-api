@@ -7,9 +7,9 @@
 <tags:master pageTitle="Cart">
     <c:if test="${not empty param.message}">
         <div class="success">
-           <p>
-                ${param.message}
-           </p>
+            <p>
+                    ${param.message}
+            </p>
         </div>
     </c:if>
     <c:if test="${not empty errors}">
@@ -63,22 +63,27 @@
                     </td>
                     <td>
                         <button form="deleteCartItem"
-                                formaction="${pageContext.servletContext.contextPath}/cart/deleteCartItem/${item.product.id}">Delete</button>
+                                formaction="${pageContext.servletContext.contextPath}/cart/deleteCartItem/${item.product.id}">
+                            Delete
+                        </button>
                     </td>
                 </tr>
             </c:forEach>
             <tr>
-               <td>Total cost</td>
-               <td>${cart.totalCost}</td>
+                <td>Total cost</td>
+                <td>${cart.totalCost}</td>
             </tr>
             <tr>
-               <td>Total quantity</td>
-               <td>${cart.totalQuantity}</td>
+                <td>Total quantity</td>
+                <td>${cart.totalQuantity}</td>
             </tr>
         </table>
         <p>
             <button>Update</button>
         </p>
+    </form>
+    <form action="${pageContext.servletContext.contextPath}/checkout">
+        <button>Checkout</button>
     </form>
     <form id="deleteCartItem" method="post">
     </form>

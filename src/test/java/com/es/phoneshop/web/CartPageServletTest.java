@@ -5,6 +5,7 @@ import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,6 +63,11 @@ public class CartPageServletTest {
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
     }
 
+    @After
+    public void deleteProduct() {
+        productDao.deleteAll();
+    }
+
     @Test
     public void testDoGet() throws ServletException, IOException {
         servlet.doGet(request, response);
@@ -115,6 +121,4 @@ public class CartPageServletTest {
         verify(request, times(2)).setAttribute(anyString(), any());
         verify(response, times(0)).sendRedirect(request.getContextPath() + "/cart?message=Cart updated successfully");
     }
-
-
 }

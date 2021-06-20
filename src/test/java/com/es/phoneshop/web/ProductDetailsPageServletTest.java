@@ -59,23 +59,25 @@ public class ProductDetailsPageServletTest {
         Currency usd = Currency.getInstance("USD");
         histories = new ArrayList<>();
         cart = new Cart();
-        productDao.save(new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories));
+        Product product = new Product(null, "test-product", "Siemens SXG75", new BigDecimal(150), usd, 40, "https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/manufacturer/Siemens/Siemens%20SXG75.jpg", histories);
+        productDao.save(product);
+        Long productId = product.getId();
         servlet.init(servletConfig);
         when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
         when(request.getSession()).thenReturn(session);
         when(session.getAttribute(PRODUCT_HISTORY_SESSION_ATTRIBUTE)).thenReturn(productHistory);
         when(session.getAttribute(CART_SESSION_ATTRIBUTE)).thenReturn(cart);
-        when(request.getPathInfo()).thenReturn("/0");
+        when(request.getPathInfo()).thenReturn("/"+productId);
         when(request.getLocale()).thenReturn(Locale.ENGLISH);
     }
 
     @Test
     public void testDoGet() throws ServletException, IOException {
         servlet.doGet(request, response);
-        verify(requestDispatcher).forward(request, response);
         verify(request).setAttribute(eq("product"), any());
         verify(request).setAttribute(eq("cart"), any());
         verify(request).setAttribute(eq("productHistory"), any());
+        verify(requestDispatcher).forward(request, response);
     }
 
     @Test
@@ -103,7 +105,7 @@ public class ProductDetailsPageServletTest {
     public void testQuantityMoreStock() throws ServletException, IOException {
         when(request.getParameter("quantity")).thenReturn("1000");
         servlet.doPost(request, response);
-        verify(request, times(4)).setAttribute(anyString(), any());
+        verify(request).setAttribute(eq("error"), any());
     }
 
     @Test

@@ -67,6 +67,24 @@
         <url-pattern>/cart/minicart/</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>checkout</servlet-name>
+        <servlet-class>com.es.phoneshop.web.CheckoutPageServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>checkout</servlet-name>
+        <url-pattern>/checkout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>orderOverview</servlet-name>
+        <servlet-class>com.es.phoneshop.web.OrderOverviewPageServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>orderOverview</servlet-name>
+        <url-pattern>/order/overview/*</url-pattern>
+    </servlet-mapping>
+
 
     <error-page>
         <location>/WEB-INF/pages/errorProductNotFound.jsp</location>
@@ -76,5 +94,18 @@
         <location>/WEB-INF/pages/error.jsp</location>
         <error-code>500</error-code>
     </error-page>
+    <error-page>
+        <exception-type>com.es.phoneshop.model.order.OrderNotFoundException</exception-type>
+        <location>/WEB-INF/pages/errorOrderNotFound.jsp</location>
+    </error-page>
+
+    <filter>
+        <filter-name>dosFilter</filter-name>
+        <filter-class>com.es.phoneshop.web.DosFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>dosFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
 </web-app>
