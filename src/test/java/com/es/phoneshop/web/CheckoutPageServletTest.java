@@ -139,8 +139,19 @@ public class CheckoutPageServletTest {
     }
 
     @Test
-    public void testSetDeliveryDateIncorrect() throws ServletException, IOException {
+    public void testSetDeliveryDateBeforeToday() throws ServletException, IOException {
         deliveryDate = "2020-10-10";
+        when(request.getParameter("deliveryDate")).thenReturn(deliveryDate);
+        servlet.doPost(request, response);
+        verify(request).setAttribute(eq("errors"), any());
+        verify(request).setAttribute(eq("order"), any());
+        verify(request).setAttribute(eq("paymentMethods"), any());
+        verify(requestDispatcher).forward(request, response);
+    }
+
+    @Test
+    public void testSetDeliveryDateIncorrect() throws ServletException, IOException {
+        deliveryDate = "ffff";
         when(request.getParameter("deliveryDate")).thenReturn(deliveryDate);
         servlet.doPost(request, response);
         verify(request).setAttribute(eq("errors"), any());

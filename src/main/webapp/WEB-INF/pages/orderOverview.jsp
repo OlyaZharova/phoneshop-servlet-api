@@ -58,8 +58,6 @@
             <tags:orderOverviewRow name="lastName" label="Last Name" order="${order}"></tags:orderOverviewRow>
             <tags:orderOverviewRow name="phone" label="Phone" order="${order}"></tags:orderOverviewRow>
             <tags:orderOverviewRow name="deliveryDate" label="Delivery date" order="${order}"></tags:orderOverviewRow>
-            <tags:orderOverviewRow name="phone" label="Phone" order="${order}"></tags:orderOverviewRow>
-            <tags:orderOverviewRow name="phone" label="Phone" order="${order}"></tags:orderOverviewRow>
             <tags:orderOverviewRow name="deliveryAddress" label="Delivery address" order="${order}"></tags:orderOverviewRow>
             <tags:orderOverviewRow name="paymentMethod" label="Payment method" order="${order}"></tags:orderOverviewRow>
         </table>

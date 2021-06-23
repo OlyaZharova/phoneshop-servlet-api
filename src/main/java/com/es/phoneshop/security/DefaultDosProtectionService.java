@@ -3,12 +3,13 @@ package com.es.phoneshop.security;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DefaultDosProtectionService implements DosProtectionService {
 
-    private static final long THRESHOLD = 20;
+    private static final int THRESHOLD = 20;
     private static final int LIMIT_TIME = 60000;
-    private Map<String, Long> countMap = new ConcurrentHashMap();
+    private Map<String, AtomicInteger> countMap = new ConcurrentHashMap();
     private volatile Date lastResetDate = new Date();
 
     private static class SingletonHelper {
@@ -22,14 +23,15 @@ public class DefaultDosProtectionService implements DosProtectionService {
     @Override
     public boolean isAllowed(String ip) {
         deleteOld();
-        Long count = countMap.get(ip);
+        AtomicInteger count = countMap.get(ip);
         if (count == null) {
-            count = 1L;
+            count = new AtomicInteger(1);
         } else {
-            if (count > THRESHOLD) {
+            int value = count.get();
+            if (value > THRESHOLD) {
                 return false;
             }
-            count++;
+            count.incrementAndGet();
         }
         countMap.put(ip, count);
         return true;

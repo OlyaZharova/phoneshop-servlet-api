@@ -7,13 +7,11 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 
 public class DefaultOrderService implements OrderService {
 
-    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private OrderDao orderDao = ArrayListOrderDao.getInstance();
 
     private static class SingletonHelper {

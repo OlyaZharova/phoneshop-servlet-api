@@ -14,7 +14,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -37,6 +39,9 @@ public class CheckoutPageServlet extends HttpServlet {
         Cart cart = cartService.getCart(request);
         request.setAttribute("order", orderService.getOrder(cart));
         request.setAttribute("paymentMethods", orderService.getPaymentMethods());
+        response.setHeader("Cache-control", "no-cache, no-store");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "-1");
         request.getRequestDispatcher("/WEB-INF/pages/checkout.jsp").forward(request, response);
     }
 
@@ -62,6 +67,9 @@ public class CheckoutPageServlet extends HttpServlet {
             request.setAttribute("errors", errors);
             request.setAttribute("order", order);
             request.setAttribute("paymentMethods", orderService.getPaymentMethods());
+            response.setHeader("Cache-control", "no-cache, no-store");
+            response.setHeader("Pragma", "no-cache");
+            response.setHeader("Expires", "-1");
             request.getRequestDispatcher("/WEB-INF/pages/checkout.jsp").forward(request, response);
         }
     }
@@ -85,21 +93,25 @@ public class CheckoutPageServlet extends HttpServlet {
     }
 
     private void setDeliveryDate(HttpServletRequest request, Map<String, String> errors, Order order) {
-        String value = request.getParameter("deliveryDate");
-        if (value == null || value.isEmpty()) {
+        String date = request.getParameter("deliveryDate");
+        if (date == null || date.isEmpty()) {
             errors.put("deliveryDate", "Delivery date is required");
         } else {
-            String[] arrayValue = value.split("-");
-            int year = Integer.valueOf(arrayValue[0]);
-            int month = Integer.valueOf(arrayValue[1]);
-            int day = Integer.valueOf(arrayValue[2]);
-            LocalDate deliveryDate = LocalDate.of(year, month, day);
-            LocalDate nowDate = LocalDate.now();
-            if (deliveryDate.isEqual(nowDate) || deliveryDate.isAfter(nowDate)) {
-                order.setDeliveryDate(LocalDate.of(year, month, day));
-            } else {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate deliveryDate;
+            try {
+                deliveryDate = LocalDate.parse(date, formatter);
+                LocalDate nowDate = LocalDate.now();
+                if (deliveryDate.isEqual(nowDate) || deliveryDate.isAfter(nowDate)) {
+                    order.setDeliveryDate(deliveryDate);
+                } else {
+                    errors.put("deliveryDate", "Delivery date must be today or later");
+                }
+            } catch (DateTimeException dateTimeException){
                 errors.put("deliveryDate", "Delivery date isn't correct");
             }
+
+
 
         }
     }

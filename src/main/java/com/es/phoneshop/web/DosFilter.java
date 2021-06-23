@@ -21,7 +21,7 @@ public class DosFilter implements Filter {
             filterChain.doFilter(servletRequest, servletResponse);
         }
         else {
-            ((HttpServletResponse)servletRequest).setStatus(429);
+            ((HttpServletResponse)servletResponse).setStatus(429);
         }
     }
 

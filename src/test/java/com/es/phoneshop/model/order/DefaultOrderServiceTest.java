@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.ServletException;
@@ -20,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultOrderServiceTest {
@@ -39,6 +40,8 @@ public class DefaultOrderServiceTest {
     private String deliveryAddress = "fff";
     private PaymentMethod paymentMethod = PaymentMethod.CACHE;
 
+    @Mock
+    private CartItem cartItem;
 
     @BeforeClass
     public static void saveProduct() {
@@ -57,7 +60,7 @@ public class DefaultOrderServiceTest {
     @Before
     public void setup() throws ServletException {
         cart = new Cart();
-        CartItem cartItem = new CartItem(product, 10);
+        cartItem = new CartItem(product, 10);
         List<CartItem> items = new ArrayList<>();
         items.add(cartItem);
         cart.setItems(items);
@@ -73,6 +76,17 @@ public class DefaultOrderServiceTest {
         assertFalse(order.getItems().isEmpty());
         assertEquals(order.getItems().get(0).getQuantity(), 10);
         assertEquals(order.getDeliveryCost(), new BigDecimal(5));
+    }
+
+    @Test
+    public void testGetOrderThrowException() throws CloneNotSupportedException {
+        try {
+            when(cartItem.clone()).thenThrow(new CloneNotSupportedException());
+            orderService.getOrder(cart);
+            fail("Expected OrderNotFoundException");
+        } catch (RuntimeException runtimeException){
+            assertNotEquals("", runtimeException.getMessage());
+        }
     }
 
     @Test
