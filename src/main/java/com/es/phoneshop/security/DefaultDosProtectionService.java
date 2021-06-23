@@ -29,7 +29,6 @@ public class DefaultDosProtectionService implements DosProtectionService {
             return false;
         }
         count.incrementAndGet();
-        countMap.put(ip, count);
         return true;
     }
 
