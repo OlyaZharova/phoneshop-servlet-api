@@ -23,16 +23,12 @@ public class DefaultDosProtectionService implements DosProtectionService {
     @Override
     public boolean isAllowed(String ip) {
         deleteOld();
-        AtomicInteger count = countMap.get(ip);
-        if (count == null) {
-            count = new AtomicInteger(1);
-        } else {
-            int value = count.get();
-            if (value > THRESHOLD) {
-                return false;
-            }
-            count.incrementAndGet();
+        AtomicInteger count = countMap.computeIfAbsent(ip, k -> new AtomicInteger(1));
+        int value = count.get();
+        if (value > THRESHOLD) {
+            return false;
         }
+        count.incrementAndGet();
         countMap.put(ip, count);
         return true;
     }
