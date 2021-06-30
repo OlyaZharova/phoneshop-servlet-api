@@ -85,14 +85,22 @@
         <url-pattern>/order/overview/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>advancedSearch</servlet-name>
+        <servlet-class>com.es.phoneshop.web.AdvancedSearchPageServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>advancedSearch</servlet-name>
+        <url-pattern>/advancedSearch</url-pattern>
+    </servlet-mapping>
 
-    <error-page>
-        <location>/WEB-INF/pages/errorProductNotFound.jsp</location>
-        <error-code>404</error-code>
-    </error-page>
     <error-page>
         <location>/WEB-INF/pages/error.jsp</location>
         <error-code>500</error-code>
+    </error-page>
+    <error-page>
+        <location>/WEB-INF/pages/errorProductNotFound.jsp</location>
+        <error-code>404</error-code>
     </error-page>
     <error-page>
         <exception-type>com.es.phoneshop.model.order.OrderNotFoundException</exception-type>
