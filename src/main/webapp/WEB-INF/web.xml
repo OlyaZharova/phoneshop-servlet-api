@@ -106,6 +106,20 @@
         <exception-type>com.es.phoneshop.model.order.OrderNotFoundException</exception-type>
         <location>/WEB-INF/pages/errorOrderNotFound.jsp</location>
     </error-page>
+    <error-page>
+        <exception-type>com.es.phoneshop.model.order.OrderNotFoundException</exception-type>
+        <location>/WEB-INF/pages/errorOrderNotFound.jsp</location>
+    </error-page>
+
+
+    <filter>
+        <filter-name>dosFilter</filter-name>
+        <filter-class>com.es.phoneshop.web.DosFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>dosFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
 
 
     <filter>
